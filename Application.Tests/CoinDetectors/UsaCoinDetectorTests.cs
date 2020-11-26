@@ -68,6 +68,7 @@ namespace Application.Tests
 
             var result = target.TryDetect(metal, out var coin);
 
+            Assert.False(result);
             Assert.Null(coin);
         }
     }
