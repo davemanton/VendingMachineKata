@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Application.CoinDetectors;
+using Application.Coins;
 using Application.Products;
 using Domain.Coins;
 
