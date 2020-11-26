@@ -1,0 +1,60 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Numerics;
+using System.Runtime.InteropServices.ComTypes;
+using Domain.Coins;
+using Domain.Products;
+
+namespace Application.Products
+{
+    public interface IProductDispenser
+    {
+        void TryDispense(string productCode, ICollection<Coin> coins, out string? error);
+        ICollection<Product> DispenseBox { get; }
+    }
+
+    public class ProductDispenser : IProductDispenser
+    {
+        public ProductDispenser()
+        {
+            DispenseBox = new List<Product>();
+        }
+
+        public ICollection<Product> DispenseBox { get; private set; }
+
+        public void TryDispense(string productCode, ICollection<Coin> coins, out string? error)
+        {
+            error = null;
+            var product = GetProductByCode(productCode);
+
+            if (product == null)
+            {
+                error = "incorrect_code";
+                return;
+            }
+
+            if (coins.Sum(x => x.Value) < product.Price)
+            {
+                error = "insufficient_funds";
+                return;
+            }
+
+            DispenseBox.Add(product);
+            coins.Clear();
+        }
+
+        private static Product? GetProductByCode(string code)
+        {
+            return code.ToLowerInvariant() switch
+            {
+                "a" => new Cola(),
+                "b" => new Chips(),
+                "c" => new Candy(),
+                _ => null
+            };
+        }
+        
+    }
+}
