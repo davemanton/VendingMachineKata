@@ -125,7 +125,7 @@ namespace Application.Tests
             foreach (var piece in piecesOfMetal)
                 target.InsertCoin(piece);
 
-            var result = target.CheckRejectionBox();
+            var result = target.CheckCoinReturn();
 
             foreach (var piece in piecesOfMetal)
                 Assert.Contains(piece, result);
@@ -145,7 +145,7 @@ namespace Application.Tests
 
             target.InsertCoin(coin);
 
-            var result = target.CheckRejectionBox();
+            var result = target.CheckCoinReturn();
 
             Assert.Contains(coin, result);
         }
@@ -235,6 +235,25 @@ namespace Application.Tests
             var response = target.Display();
 
             Assert.Equal($"$0.05", response);
+        }
+
+        [Fact]
+        public void SelectProduct_PutsChangeInCoinReturn()
+        {
+            _dispenserCoinReturn = new List<Coin>
+            {
+                new Nickel(),
+                new Dime()
+            };
+
+            var target = GetTarget();
+
+            target.SelectProduct("a");
+
+            var result = target.CheckCoinReturn();
+
+            foreach (var coin in _dispenserCoinReturn)
+                Assert.Contains(coin.Name, result);
         }
 
     }

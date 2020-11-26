@@ -2,6 +2,6 @@
 {
     public record Quarter : Coin
     {
-        public Quarter() : base(25) { }
+        public Quarter() : base("quarter", 25) { }
     }
 }

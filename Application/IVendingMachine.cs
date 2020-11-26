@@ -6,7 +6,7 @@ namespace Application
     {
         string Display();
         void InsertCoin(string pieceOfMetal);
-        ICollection<string> CheckRejectionBox();
+        ICollection<string> CheckCoinReturn();
         void SelectProduct(string selection);
     }
 }

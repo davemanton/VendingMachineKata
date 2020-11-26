@@ -2,11 +2,13 @@
 {
     public abstract record Coin
     {
-        protected Coin(int value)
+        protected Coin(string name, int value)
         {
+            Name = name;
             Value = value;
         }
 
+        public string Name { get; }
         public int Value { get; }
     }
 }

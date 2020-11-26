@@ -2,6 +2,6 @@
 {
     public record Dime : Coin
     {
-        public Dime() : base(10) { }
+        public Dime() : base("dime", 10) { }
     }
 }

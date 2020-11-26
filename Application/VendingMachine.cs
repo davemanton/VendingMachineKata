@@ -11,9 +11,8 @@ namespace Application
         private readonly ICoinDetector _coinDetector;
         private readonly IProductDispenser _productDispenser;
 
-        private readonly ICollection<string> _rejectionBox;
-        
         private ICollection<Coin> _coins;
+        private ICollection<string> _coinReturn;
         private string? _tempDisplayMessage;
         
         public VendingMachine(ICoinDetector coinDetector,
@@ -23,10 +22,10 @@ namespace Application
             _productDispenser = productDispenser;
         
             _coins = new List<Coin>();
-            _rejectionBox = new List<string>();
+            _coinReturn = new List<string>();
         }
 
-        public ICollection<string> CheckRejectionBox() => _rejectionBox;
+        public ICollection<string> CheckCoinReturn() => _coinReturn;
 
         public string Display()
         {
@@ -47,7 +46,7 @@ namespace Application
 
             if (!success || coin == null)
             {
-                _rejectionBox.Add(pieceOfMetal);
+                _coinReturn.Add(pieceOfMetal);
 
                 return;
             }
@@ -62,11 +61,15 @@ namespace Application
             if (error == null)
             {
                 _tempDisplayMessage = "THANK YOU";
+                
+                _coinReturn = _coins.Select(x => x.Name).ToList();
+                _coins.Clear();
 
                 return;
             }
 
             _tempDisplayMessage = $"PRICE {ConvertToDisplayMoney((int)error.Data["price"])}";
+            
         }
 
         private static string ConvertToDisplayMoney(int value) => $"${decimal.Divide(value, 100):N2}";

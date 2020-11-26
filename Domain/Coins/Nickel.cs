@@ -2,6 +2,6 @@
 {
     public record Nickel : Coin
     {
-        public Nickel() : base(5) { }
+        public Nickel() : base("nickel", 5) { }
     }
 }
