@@ -40,7 +40,7 @@ namespace Application.Products
             }
 
             DispenseBox.Add(product);
-            return new List<Coin>();
+            return CalculateChange(product.Price, coins.Sum(x => x.Value));
         }
 
         private static Product? GetProductByCode(string code)
@@ -53,6 +53,33 @@ namespace Application.Products
                 _ => null
             };
         }
-        
+
+        private ICollection<Coin> CalculateChange(int price,
+                                                  int coinValue)
+        {
+            var change = coinValue - price;
+            var changeCoins = new List<Coin>();
+
+            var tempChange = changeCoins.Sum(x => x.Value);
+            while (tempChange < change)
+            {
+                switch (change - tempChange)
+                {
+                    case >= 25:
+                        changeCoins.Add(new Quarter());
+                        break;
+                    case >= 10:
+                        changeCoins.Add(new Dime());
+                        break;
+                    case >= 5:
+                        changeCoins.Add(new Nickel());
+                        break;
+                }
+
+                tempChange = changeCoins.Sum(x => x.Value);
+            }
+
+            return changeCoins;
+        }
     }
 }

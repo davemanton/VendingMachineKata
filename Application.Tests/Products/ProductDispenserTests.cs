@@ -81,10 +81,6 @@ namespace Application.Tests.Products
         [Theory]
         [InlineData("a")]
         [InlineData("A")]
-        [InlineData("b")]
-        [InlineData("B")]
-        [InlineData("c")]
-        [InlineData("C")]
         public void TryDispense_IfProductDispensed_ClearsCoins(string productCode)
         {
             var target = GetTarget();
@@ -93,6 +89,21 @@ namespace Application.Tests.Products
 
             Assert.Empty(result);
             Assert.NotEmpty(target.DispenseBox);
+        }
+
+        [Theory]
+        [InlineData("a", 25)]
+        [InlineData("b", 75)]
+        [InlineData("c", 60)]
+        public void TryDispense_CalculatesAndReturnsChange(string productCode, int expectedChange)
+        {
+            var target = GetTarget();
+
+            _coins.Add(new Quarter());
+
+            var result = target.TryDispense(productCode, _coins, out _);
+
+            Assert.Equal(expectedChange, result.Sum(x => x.Value));
         }
     }
 }
