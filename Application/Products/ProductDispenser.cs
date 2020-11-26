@@ -11,7 +11,7 @@ namespace Application.Products
 {
     public interface IProductDispenser
     {
-        void TryDispense(string productCode, ICollection<Coin> coins, out string? error);
+        void TryDispense(string productCode, ICollection<Coin> coins, out DispenserError? error);
         ICollection<Product> DispenseBox { get; }
     }
 
@@ -24,20 +24,26 @@ namespace Application.Products
 
         public ICollection<Product> DispenseBox { get; private set; }
 
-        public void TryDispense(string productCode, ICollection<Coin> coins, out string? error)
+        public void TryDispense(string productCode, ICollection<Coin> coins, out DispenserError? error)
         {
             error = null;
             var product = GetProductByCode(productCode);
 
             if (product == null)
             {
-                error = "incorrect_code";
+                error = new DispenserError("incorrect_code");
                 return;
             }
 
             if (coins.Sum(x => x.Value) < product.Price)
             {
-                error = "insufficient_funds";
+                error = new DispenserError(
+                    "insufficient_funds",
+                    new Dictionary<string, object>
+                    {
+                        {"price", product.Price}
+                    });
+
                 return;
             }
 
@@ -56,5 +62,17 @@ namespace Application.Products
             };
         }
         
+    }
+
+    public record DispenserError
+    {
+        public DispenserError(string errorCode, IDictionary<string, object>? data = null)
+        {
+            ErrorCode = errorCode;
+            Data = data ?? new Dictionary<string, object>();
+        }
+
+        public string ErrorCode { get; }
+        public IDictionary<string, object> Data { get; }
     }
 }

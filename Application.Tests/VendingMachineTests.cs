@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Application;
 using Application.CoinDetectors;
+using Application.Products;
 using Domain.Coins;
 using Moq;
 using Xunit;
@@ -12,9 +12,12 @@ namespace Application.Tests
     {
 
         private readonly Mock<ICoinDetector> _coinDetector;
+        private readonly Mock<IProductDispenser> _productDispenser;
 
         private delegate void MockCoinAction(string pieceOfMetal, out Coin? outVal);
+        private delegate void MockDispenseAction(string productCode, ICollection<Coin> coins, out DispenserError? error);
         private Coin? _validCoin;
+        private DispenserError? _dispenserError;
 
         public VendingMachineTests()
         {
@@ -31,11 +34,21 @@ namespace Application.Tests
                         _ => null
                     };
                 }));
+
+            _productDispenser = new Mock<IProductDispenser>();
+            _productDispenser.Setup(x => x.TryDispense(It.IsAny<string>(), It.IsAny<ICollection<Coin>>(), out _dispenserError))
+                .Callback(new MockDispenseAction((string productCode, ICollection<Coin> coins, out DispenserError? error) =>
+                {
+                    error = _dispenserError;
+
+                    if(_dispenserError == null)
+                        coins.Clear();
+                }));
         }
 
         private IVendingMachine GetTarget()
         {
-            return new VendingMachine(_coinDetector.Object);
+            return new VendingMachine(_coinDetector.Object, _productDispenser.Object);
         }
 
         [Fact]
@@ -133,6 +146,89 @@ namespace Application.Tests
             var result = target.CheckRejectionBox();
 
             Assert.Contains(coin, result);
+        }
+
+        [Theory]
+        [InlineData("a")]
+        [InlineData("b")]
+        [InlineData("c")]
+        public void SelectProduct_IfMachineVends_DisplaysThankYou(string selection)
+        {
+            var target = GetTarget();
+
+            for(var i = 0; i < 4; i++)
+                target.InsertCoin("quarter");
+
+            target.SelectProduct(selection);
+
+            var response = target.Display();
+
+            Assert.Equal("THANK YOU", response);
+        }
+
+        [Theory]
+        [InlineData("a")]
+        [InlineData("b")]
+        [InlineData("c")]
+        public void SelectProduct_DisplaysInsertCoins_AfterThanks(string selection)
+        {
+            var target = GetTarget();
+
+            target.SelectProduct(selection);
+
+            target.Display();
+            var response = target.Display();
+
+            Assert.Equal("INSERT COIN", response);
+        }
+
+        [Theory]
+        [InlineData("a", 100)]
+        [InlineData("b", 50)]
+        [InlineData("c", 65)]
+        public void SelectProduct_InsufficientFunds_DisplaysPrice(string selection, int price)
+        {
+            _dispenserError = new DispenserError("insufficient_funds", new Dictionary<string, object>(){ { "price", price } });
+
+            var target = GetTarget();
+
+            target.SelectProduct(selection);
+
+            var response = target.Display();
+
+            Assert.Equal($"PRICE ${decimal.Divide(price, 100):N2}", response);
+        }
+
+        [Fact]
+        public void SelectProduct_InsufficientFunds_SecondDisplayShowsInsertCoins_IfNoCoins()
+        {
+            _dispenserError = new DispenserError("insufficient_funds", new Dictionary<string, object>() { { "price", 100 } });
+
+            var target = GetTarget();
+
+            target.SelectProduct("a");
+
+            target.Display();
+            var response = target.Display();
+
+            Assert.Equal($"INSERT COIN", response);
+        }
+
+        [Fact]
+        public void SelectProduct_InsufficientFunds_SecondDisplayShowsAmount()
+        {
+            _dispenserError = new DispenserError("insufficient_funds", new Dictionary<string, object>() { { "price", 100 } });
+
+            var target = GetTarget();
+
+            target.InsertCoin("nickel");
+
+            target.SelectProduct("a");
+
+            target.Display();
+            var response = target.Display();
+
+            Assert.Equal($"$0.05", response);
         }
     }
 }

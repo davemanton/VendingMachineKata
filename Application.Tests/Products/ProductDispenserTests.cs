@@ -49,10 +49,10 @@ namespace Application.Tests.Products
         {
             var target = GetTarget();
 
-            target.TryDispense("badCode", _coins, out string? error);
+            target.TryDispense("badCode", _coins, out var error);
 
             Assert.Empty(target.DispenseBox);
-            Assert.Equal("incorrect_code", error);
+            Assert.Equal("incorrect_code", error.ErrorCode);
         }
 
         [Theory]
@@ -75,7 +75,7 @@ namespace Application.Tests.Products
             target.TryDispense(productCode, coins, out var error);
 
             Assert.Empty(target.DispenseBox);
-            Assert.Equal("insufficient_funds", error);
+            Assert.Equal("insufficient_funds", error.ErrorCode);
         }
 
         [Theory]
