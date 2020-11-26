@@ -1,6 +1,6 @@
 ﻿using Domain.Coins;
 
-namespace Application.CoinDetectors
+namespace Application.Coins
 {
     public interface ICoinDetector
     {

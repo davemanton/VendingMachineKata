@@ -1,5 +1,5 @@
 using System;
-using Application.CoinDetectors;
+using Application.Coins;
 using Domain.Coins;
 using Xunit;
 
