@@ -10,11 +10,13 @@ namespace Application.Products
         public ProductDispenser()
         {
             DispenseBox = new List<Product>();
+            Change = new List<Coin>();
         }
 
-        public ICollection<Product> DispenseBox { get; private set; }
+        public ICollection<Product> DispenseBox { get; private init; }
+        public ICollection<Coin> Change { get; private init; }
 
-        public void TryDispense(string productCode, ICollection<Coin> coins, out DispenserError? error)
+        public ICollection<Coin> TryDispense(string productCode, ICollection<Coin> coins, out DispenserError? error)
         {
             error = null;
             var product = GetProductByCode(productCode);
@@ -22,7 +24,7 @@ namespace Application.Products
             if (product == null)
             {
                 error = new DispenserError("incorrect_code");
-                return;
+                return coins;
             }
 
             if (coins.Sum(x => x.Value) < product.Price)
@@ -34,11 +36,11 @@ namespace Application.Products
                         {"price", product.Price}
                     });
 
-                return;
+                return coins;
             }
 
             DispenseBox.Add(product);
-            coins.Clear();
+            return new List<Coin>();
         }
 
         private static Product? GetProductByCode(string code)
@@ -52,17 +54,5 @@ namespace Application.Products
             };
         }
         
-    }
-
-    public record DispenserError
-    {
-        public DispenserError(string errorCode, IDictionary<string, object>? data = null)
-        {
-            ErrorCode = errorCode;
-            Data = data ?? new Dictionary<string, object>();
-        }
-
-        public string ErrorCode { get; }
-        public IDictionary<string, object> Data { get; }
     }
 }

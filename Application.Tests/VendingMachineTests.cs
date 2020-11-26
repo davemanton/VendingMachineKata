@@ -18,6 +18,7 @@ namespace Application.Tests
         private delegate void MockDispenseAction(string productCode, ICollection<Coin> coins, out DispenserError? error);
         private Coin? _validCoin;
         private DispenserError? _dispenserError;
+        private ICollection<Coin> _dispenserCoinReturn;
 
         public VendingMachineTests()
         {
@@ -35,19 +36,20 @@ namespace Application.Tests
                     };
                 }));
 
+            _dispenserCoinReturn = new List<Coin>();
             _productDispenser = new Mock<IProductDispenser>();
             _productDispenser.Setup(x => x.TryDispense(It.IsAny<string>(), It.IsAny<ICollection<Coin>>(), out _dispenserError))
                 .Callback(new MockDispenseAction((string productCode, ICollection<Coin> coins, out DispenserError? error) =>
-                {
-                    error = _dispenserError;
-
-                    if(_dispenserError == null)
-                        coins.Clear();
-                }));
+                        {
+                            error = _dispenserError;
+                        }));
         }
 
         private IVendingMachine GetTarget()
         {
+            _productDispenser.Setup(x => x.TryDispense(It.IsAny<string>(), It.IsAny<ICollection<Coin>>(), out _dispenserError))
+                .Returns(_dispenserCoinReturn);
+
             return new VendingMachine(_coinDetector.Object, _productDispenser.Object);
         }
 
@@ -218,6 +220,10 @@ namespace Application.Tests
         public void SelectProduct_InsufficientFunds_SecondDisplayShowsAmount()
         {
             _dispenserError = new DispenserError("insufficient_funds", new Dictionary<string, object>() { { "price", 100 } });
+            _dispenserCoinReturn = new List<Coin>
+            {
+                new Nickel()
+            };
 
             var target = GetTarget();
 
@@ -230,5 +236,6 @@ namespace Application.Tests
 
             Assert.Equal($"$0.05", response);
         }
+
     }
 }

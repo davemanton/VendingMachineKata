@@ -11,9 +11,9 @@ namespace Application
         private readonly ICoinDetector _coinDetector;
         private readonly IProductDispenser _productDispenser;
 
-        private readonly ICollection<Coin> _coins;
         private readonly ICollection<string> _rejectionBox;
-
+        
+        private ICollection<Coin> _coins;
         private string? _tempDisplayMessage;
         
         public VendingMachine(ICoinDetector coinDetector,
@@ -57,7 +57,7 @@ namespace Application
 
         public void SelectProduct(string selection)
         {
-            _productDispenser.TryDispense(selection, _coins, out var error);
+            _coins = _productDispenser.TryDispense(selection, _coins, out var error);
 
             if (error == null)
             {

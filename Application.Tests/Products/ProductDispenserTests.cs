@@ -89,9 +89,9 @@ namespace Application.Tests.Products
         {
             var target = GetTarget();
 
-            target.TryDispense(productCode, _coins, out _);
+            var result = target.TryDispense(productCode, _coins, out _);
 
-            Assert.Empty(_coins);
+            Assert.Empty(result);
             Assert.NotEmpty(target.DispenseBox);
         }
     }
