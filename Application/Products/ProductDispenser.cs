@@ -10,11 +10,9 @@ namespace Application.Products
         public ProductDispenser()
         {
             DispenseBox = new List<Product>();
-            Change = new List<Coin>();
         }
 
         public ICollection<Product> DispenseBox { get; private init; }
-        public ICollection<Coin> Change { get; private init; }
 
         public ICollection<Coin> TryDispense(string productCode, ICollection<Coin> coins, out DispenserError? error)
         {
@@ -54,8 +52,8 @@ namespace Application.Products
             };
         }
 
-        private ICollection<Coin> CalculateChange(int price,
-                                                  int coinValue)
+        private static ICollection<Coin> CalculateChange(int price,
+                                                         int coinValue)
         {
             var change = coinValue - price;
             var changeCoins = new List<Coin>();
