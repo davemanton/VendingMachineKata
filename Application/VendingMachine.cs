@@ -3,6 +3,7 @@ using System.Linq;
 using Application.Coins;
 using Application.Products;
 using Domain.Coins;
+using Domain.Products;
 
 namespace Application
 {
@@ -25,7 +26,13 @@ namespace Application
             _coinReturn = new List<string>();
         }
 
-        public ICollection<string> CheckCoinReturn() => _coinReturn;
+        public ICollection<string> CheckCoinReturn()
+        {
+            var returnedCoins = _coinReturn.Select(x => x).ToList();
+            _coinReturn.Clear();
+
+            return returnedCoins;
+        }
 
         public string Display()
         {
@@ -71,6 +78,8 @@ namespace Application
             _tempDisplayMessage = $"PRICE {ConvertToDisplayMoney((int)error.Data["price"])}";
             
         }
+
+        public ICollection<string> CheckDispenserHopper() => _productDispenser.DispenseBox.Select(x => x.Name).ToList();
 
         private static string ConvertToDisplayMoney(int value) => $"${decimal.Divide(value, 100):N2}";
     }

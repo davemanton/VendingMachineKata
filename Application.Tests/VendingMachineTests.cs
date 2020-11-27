@@ -3,6 +3,7 @@ using System.Linq;
 using Application.Coins;
 using Application.Products;
 using Domain.Coins;
+using Domain.Products;
 using Moq;
 using Xunit;
 
@@ -17,14 +18,27 @@ namespace Application.Tests
         private delegate void MockCoinAction(string pieceOfMetal, out Coin? outVal);
         private delegate void MockDispenseAction(string productCode, ICollection<Coin> coins, out DispenserError? error);
         private Coin? _validCoin;
+        private bool _isValidCoin;
         private DispenserError? _dispenserError;
         private ICollection<Coin> _dispenserCoinReturn;
+        private ICollection<Product> _dispensedProducts; 
 
         public VendingMachineTests()
         {
             _coinDetector = new Mock<ICoinDetector>();
-            _coinDetector.Setup(x => x.TryDetect(It.Is<string>(arg => new[] {"nickel", "dime", "quarter"}.Contains(arg)), out _validCoin))
-                .Returns(true)
+            _isValidCoin = true;
+            
+            _productDispenser = new Mock<IProductDispenser>();
+            _dispenserCoinReturn = new List<Coin>();
+            _dispensedProducts = new List<Product>();
+        }
+
+        private IVendingMachine GetTarget()
+        {
+            _productDispenser.Setup(x => x.DispenseBox).Returns(_dispensedProducts);
+
+            _coinDetector.Setup(x => x.TryDetect(It.IsAny<string>(), out _validCoin))
+                .Returns(_isValidCoin)
                 .Callback(new MockCoinAction((string coinName, out Coin? coin) =>
                 {
                     coin = coinName switch
@@ -36,19 +50,12 @@ namespace Application.Tests
                     };
                 }));
 
-            _dispenserCoinReturn = new List<Coin>();
-            _productDispenser = new Mock<IProductDispenser>();
             _productDispenser.Setup(x => x.TryDispense(It.IsAny<string>(), It.IsAny<ICollection<Coin>>(), out _dispenserError))
+                .Returns(_dispenserCoinReturn)
                 .Callback(new MockDispenseAction((string productCode, ICollection<Coin> coins, out DispenserError? error) =>
-                        {
-                            error = _dispenserError;
-                        }));
-        }
-
-        private IVendingMachine GetTarget()
-        {
-            _productDispenser.Setup(x => x.TryDispense(It.IsAny<string>(), It.IsAny<ICollection<Coin>>(), out _dispenserError))
-                .Returns(_dispenserCoinReturn);
+                {
+                    error = _dispenserError;
+                }));
 
             return new VendingMachine(_coinDetector.Object, _productDispenser.Object);
         }
@@ -137,11 +144,11 @@ namespace Application.Tests
         [InlineData("quarter")]
         public void InsertCoins_PlacesCoinInRejectionBox_IfCoinNotDetectedProperly(string coin)
         {
+            var target = GetTarget();
+
             _validCoin = null;
             _coinDetector.Setup(x => x.TryDetect(It.IsAny<string>(), out _validCoin))
                 .Returns(true);
-
-            var target = GetTarget();
 
             target.InsertCoin(coin);
 
@@ -254,6 +261,38 @@ namespace Application.Tests
 
             foreach (var coin in _dispenserCoinReturn)
                 Assert.Contains(coin.Name, result);
+        }
+
+        [Fact]
+        public void CheckCoinReturn_ShouldClearCoinReturn()
+        {
+            var target = GetTarget();
+
+            target.InsertCoin("button");
+
+            var result = target.CheckCoinReturn();
+            Assert.Contains("button", result);
+
+            result = target.CheckCoinReturn();
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void CheckDispenserHopper_ShouldReturnDispenserValues()
+        {
+            _dispensedProducts = new List<Product>()
+            {
+                new Candy(),
+                new Chips(),
+                new Cola()
+            };
+
+            var target = GetTarget();
+
+            var result = target.CheckDispenserHopper();
+            
+            foreach(var product in _dispensedProducts)
+                Assert.Contains(product.Name, result);
         }
 
     }

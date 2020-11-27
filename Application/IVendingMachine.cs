@@ -8,5 +8,6 @@ namespace Application
         void InsertCoin(string pieceOfMetal);
         ICollection<string> CheckCoinReturn();
         void SelectProduct(string selection);
+        ICollection<string> CheckDispenserHopper();
     }
 }
